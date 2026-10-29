@@ -229,7 +229,7 @@ function drawShield(x, kind, num, cx, cy, S) {
     x.fillStyle = '#111'; x.beginPath(); x.ellipse(-w * .3, -S * .24, S * .08, S * .11, -.3, 0, 7); x.fill(); // Washington profile (WA route shield)
     x.font = `bold ${S * .5}px Arial`; x.fillText(num, S * .06, S * .1); }
   x.restore(); }
-function guideTex(o) { return canvasTex(1024, 512, (x, w, h) => {
+function guideTex(o) { const Z = (LOW || MOBILE) ? .5 : 1; return canvasTex(1024 * Z, 512 * Z, (x, w, h) => { x.scale(Z, Z); w /= Z; h /= Z;
   x.fillStyle = '#0b6a3a'; x.beginPath(); x.roundRect(0, 0, w, h, 28); x.fill(); x.strokeStyle = '#f2f2f2'; x.lineWidth = 10; x.beginPath(); x.roundRect(14, 14, w - 28, h - 28, 20); x.stroke();
   let y = 34; const sh = o.sh || [];
   if (sh.length) { const S = 140, dir = sh.some(q => q[2]); sh.forEach(([k, n, d], i) => { const cx = w / 2 + (i - (sh.length - 1) / 2) * 280; if (d) { x.fillStyle = '#fff'; x.font = 'bold 50px Arial'; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(d, cx, y + 46); } drawShield(x, k, n, cx, y + (dir ? 62 : 6) + S / 2, S); }); y += dir ? 218 : 160; }
@@ -259,12 +259,18 @@ function gantry(s, signs) { frame(s, F); const h = F.h, iR = W(Math.floor(s / ST
 const ROUTE = { 'I-5': ['I', '5', 'SOUTH'], 'I-205': ['I', '205', 'NORTH'], 'SR-14': ['S', '14', 'EAST'], 'SR-500': ['S', '500', 'WEST'] };
 const CTRL = { 'I-5': 'Portland', 'I-205': 'Seattle · Orchards', 'SR-14': 'Camas · Washougal', 'SR-500': 'Vancouver · I-5' };
 const parseR = t => { const m = /^(I|SR)\s*(\d+)\s*([A-Za-z]*)/.exec(t || ''); return m ? [m[1] === 'I' ? 'I' : 'S', m[2], m[3].toUpperCase()] : null; };
-const taken = [], freeAt = s => !taken.some(t => Math.abs(t - s) < 170);
-const EXS = OSM.exits.map(e => ({ ...e, s: e.i * STEP, nm: [...new Set(e.names.map(abbr))].slice(0, 2), sh: parseR(e.dref), ref: e.ref.replace(/;/g, '/') }));
+const taken = [], freeAt = s => !taken.some(t => Math.abs(t - s) < 130), side = [];
+const EXS = OSM.exits.map(e => ({ ...e, s: e.i * STEP, nm: [...new Set(e.names.map(abbr))].slice(0, 2), sh: (e.dref || '').split(';').map(parseR).filter(Boolean).slice(0, 2), ref: e.ref.replace(/;/g, '/') }));
 TR.secs.forEach(([nm, i0]) => { if (nm === 'Ramp') return; const s = i0 * STEP + 240; taken.push(s); gantry(s, [{ d: -1.6, w: 7.4, tex: guideTex({ sh: [ROUTE[nm]], lines: [CTRL[nm]] }) }]); });
-for (const e of EXS) { const sh = e.sh ? [e.sh] : [], lines = e.nm.length ? e.nm : ['Exit'];
-  for (const [b, foot] of [[760, '½ MILE'], [280, 'EXIT ONLY']]) { const s = e.s - b; if (s < 0 || !freeAt(s)) continue; taken.push(s); const nl = nlAt(s);
-    gantry(s, [{ d: laneD(nl - 1) + .4, w: 7.4, tab: e.ref ? 'EXIT ' + e.ref : '', tex: guideTex({ sh, lines, foot }) }]); } }
+const wrapS = s => ((s % L) + L) % L;
+function sideSign(s, tex) { frame(s, F); const d = 11.2 + exrAt(s), grp = new THREE.Group(); const sg = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 3.2), signMat(tex)); sg.position.set(0, 4.4, 0); sg.rotation.y = Math.PI; grp.add(sg);
+  const bk = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 3.2), backMat); bk.position.set(0, 4.4, .05); grp.add(bk); [-2.2, 2.2].forEach(x => { const po = new THREE.Mesh(new THREE.BoxGeometry(.25, 6, .25), steel); po.position.set(x, 2.4, .2); grp.add(po); });
+  grp.position.set(F.p.x + F.r.x * d, F.p.y - .6, F.p.z + F.r.z * d); grp.rotation.y = F.h; scene.add(grp); side.push(s); }
+for (const [b, foot] of [[300, 'EXIT ONLY'], [805, '½ MILE']]) for (const e of EXS) { const lines = e.nm.length ? e.nm : ['Exit'];
+  for (const o of [0, 40, -40, 80, -80, 120]) { const s = wrapS(e.s - b + o); if (!freeAt(s)) continue; taken.push(s); const nl = nlAt(s);
+    gantry(s, [{ d: laneD(nl - 1) + .4, w: 7.4, tab: e.ref ? 'EXIT ' + e.ref : '', tex: guideTex({ sh: e.sh, lines, foot: e.route && foot === 'EXIT ONLY' ? '' : foot }) }]); break; } }
+for (const e of EXS) for (const o of [0, 60, -60, 120, -120, 180]) { const s = wrapS(e.s - 1610 + o); if (taken.some(t => Math.abs(t - s) < 45) || side.some(t => Math.abs(t - s) < 80) || OPEN[W(Math.floor(s / STEP))]) continue;
+  sideSign(s, guideTex({ sh: e.sh, lines: e.nm.length ? e.nm : ['Exit'], foot: '1 MILE' })); if (e.ref) { } break; }
 // ramp ribbons + gore: crash cushion + 'EXIT nn' post sign
 { const rampTex = canvasTex(128, 256, (x, w, h) => { x.fillStyle = DAY ? '#3e3e42' : '#16161a'; x.fillRect(0, 0, w, h); for (let i = 0; i < 3000; i++) { const g = (DAY ? 46 : 14) + Math.random() * 40 | 0; x.fillStyle = `rgb(${g},${g},${g + 3})`; x.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } x.fillStyle = '#e6e6e6'; x.fillRect(4, 0, 4, h); x.fillStyle = '#e6e6e6'; x.fillRect(w - 8, 0, 4, h); }, true);
   const pos = [], uv = [], idx = []; let base = 0;
@@ -295,29 +301,29 @@ function beams(list, mat, th) { const g = new THREE.BoxGeometry(1, 1, 1); g.tran
 const resamp = (g, st) => { const o = []; for (let k = 0; k < g.length - 1; k++) { const [x0, z0] = g[k], [x1, z1] = g[k + 1], n = Math.max(1, Math.round(Math.hypot(x1 - x0, z1 - z0) / st)); for (let m = 0; m < n; m++) o.push([x0 + (x1 - x0) * m / n, z0 + (z1 - z0) * m / n]); } o.push(g.at(-1)); return o; };
 // Interstate Bridge: twin steel through-truss spans with the vertical-lift towers on the Vancouver side
 { const A = [-4930, 2017], B = [-5325, 2995], al = Math.hypot(B[0] - A[0], B[1] - A[1]), ux = (B[0] - A[0]) / al, uz = (B[1] - A[1]) / al;
-  const tm = new THREE.MeshStandardMaterial({ color: DAY ? 0x7d8a80 : 0x2a302c, roughness: .55, metalness: .5 }), dm = new THREE.MeshStandardMaterial({ color: DAY ? 0x9d9a92 : 0x2a2a2c, roughness: .9 });
+  const tm = new THREE.MeshStandardMaterial({ color: DAY ? 0x56665c : 0x2a302c, roughness: .55, metalness: .5 }), dm = new THREE.MeshStandardMaterial({ color: DAY ? 0x9d9a92 : 0x2a2a2c, roughness: .9 });
   const tr = [], dk = [], pr = [], tw = [];
   for (const w of OSM.lmk.ibridge) { const g = resamp(w.g, 9);
     for (let k = 0; k < g.length - 1; k++) { const [x0, z0] = g[k], [x1, z1] = g[k + 1], dx = x1 - x0, dz = z1 - z0, dl = Math.hypot(dx, dz) || 1, nx = -dz / dl, nz = dx / dl;
       const u0 = (x0 - A[0]) * ux + (z0 - A[1]) * uz, u1 = (x1 - A[0]) * ux + (z1 - A[1]) * uz;
       const yd0 = Math.max(demAt(x0, z0) + .8, WATER_Y + 13), yd1 = Math.max(demAt(x1, z1) + .8, WATER_Y + 13);
-      const ht = u => w.mov ? 13 : 5 + 7 * Math.sin(Math.PI * (((u % 82) + 82) % 82) / 82);
+      const ht = u => w.mov ? 20 : 7 + 11 * Math.sin(Math.PI * (((u % 82) + 82) % 82) / 82);
       dk.push([x0, yd0 - .6, z0, x1, yd1 - .6, z1, 12.5, 1.2]);
       if (u0 < 40 || u0 > al - 30) continue;
       [-6.5, 6.5].forEach(o => { const ax = x0 + nx * o, az = z0 + nz * o, bx = x1 + nx * o, bz = z1 + nz * o, h0 = ht(u0), h1 = ht(u1);
-        tr.push([ax, yd0, az, bx, yd1, bz, .6, .7], [ax, yd0 + h0, az, bx, yd1 + h1, bz, .7, .7], [ax, yd0, az, ax, yd0 + h0, az, .35, .35], [k % 2 ? ax : bx, k % 2 ? yd0 : yd1, k % 2 ? az : bz, k % 2 ? bx : ax, k % 2 ? yd1 + h1 : yd0 + h0, k % 2 ? bz : az, .3, .3]); });
+        tr.push([ax, yd0, az, bx, yd1, bz, 1.1, 1.2], [ax, yd0 + h0, az, bx, yd1 + h1, bz, 1.3, 1.3], [ax, yd0, az, ax, yd0 + h0, az, .7, .7], [k % 2 ? ax : bx, k % 2 ? yd0 : yd1, k % 2 ? az : bz, k % 2 ? bx : ax, k % 2 ? yd1 + h1 : yd0 + h0, k % 2 ? bz : az, .3, .3]); });
       tr.push([x0 - nx * 6.5, yd0 + ht(u0), z0 - nz * 6.5, x0 + nx * 6.5, yd0 + ht(u0), z0 + nz * 6.5, .3, .3]);
       if (Math.floor(u0 / 82) !== Math.floor(u1 / 82) && demAt(x0, z0) < WATER_Y + 3) pr.push([x0, WATER_Y - 2, z0, x0, yd0 - 1.2, z0, 15, 4]); }
-    if (w.mov) [w.g[0], w.g.at(-1)].forEach(([x, z]) => { const yd = WATER_Y + 13; [-1, 1].forEach(sx => [-1, 1].forEach(sz => tw.push([x + uz * 7 * sx + ux * 2.5 * sz, yd, z - ux * 7 * sx + uz * 2.5 * sz, x + uz * 7 * sx + ux * 2.5 * sz, yd + 50, z - ux * 7 * sx + uz * 2.5 * sz, .9, .9])));
-      tw.push([x + uz * 7.5, yd + 50, z - ux * 7.5, x - uz * 7.5, yd + 50, z + ux * 7.5, 6, 2.2], [x + uz * 7.5, yd + 30, z - ux * 7.5, x - uz * 7.5, yd + 30, z + ux * 7.5, 5.5, 4]); }); }
+    if (w.mov) [w.g[0], w.g.at(-1)].forEach(([x, z]) => { const yd = WATER_Y + 13; [-1, 1].forEach(sx => [-1, 1].forEach(sz => tw.push([x + uz * 7 * sx + ux * 2.5 * sz, yd, z - ux * 7 * sx + uz * 2.5 * sz, x + uz * 7 * sx + ux * 2.5 * sz, yd + 88, z - ux * 7 * sx + uz * 2.5 * sz, 2.6, 2.6])));
+      tw.push([x + uz * 8.5, yd + 88, z - ux * 8.5, x - uz * 8.5, yd + 88, z + ux * 8.5, 7, 4], [x + uz * 8.5, yd + 56, z - ux * 8.5, x - uz * 8.5, yd + 56, z + ux * 8.5, 6, 3], [x + uz * 8.5, yd + 24, z - ux * 8.5, x - uz * 8.5, yd + 24, z + ux * 8.5, 6, 3]); }); }
   beams(tr, tm, .5); beams(dk, dm, 1); beams(pr, dm, 4); beams(tw, tm, 1); }
 // Glenn L. Jackson Bridge (I-205): long, high concrete box girder on tall piers
 { const ws = OSM.lmk.glenn.filter(g => g.every(([x, z]) => x > 3800 && x < 5600 && z > 3700 && z < 6600)); let z0 = 1e9, z1 = -1e9; ws.forEach(g => g.forEach(([, z]) => { z0 = Math.min(z0, z); z1 = Math.max(z1, z); }));
-  const dm = new THREE.MeshStandardMaterial({ color: DAY ? 0xa29e94 : 0x333335, roughness: .85 }), dk = [], pr = [];
-  const yAt = (x, z) => Math.max(demAt(x, z) + 1, WATER_Y + 4 + 52 * THREE.MathUtils.smoothstep(z, z0, z0 + 450) * (1 - THREE.MathUtils.smoothstep(z, z1 - 600, z1)));
+  const dm = new THREE.MeshStandardMaterial({ color: DAY ? 0x8e8a81 : 0x333335, roughness: .85 }), dk = [], pr = [];
+  const yAt = (x, z) => Math.max(demAt(x, z) + 1, WATER_Y + 4 + 100 * THREE.MathUtils.smoothstep(z, z0, z0 + 650) * (1 - THREE.MathUtils.smoothstep(z, z1 - 600, z1)));
   for (const w of ws) { const g = resamp(w, 12); for (let k = 0; k < g.length - 1; k++) { const [xa, za] = g[k], [xb, zb] = g[k + 1], ya = yAt(xa, za), yb = yAt(xb, zb);
       if (Math.min(...P.filter((_, i) => i % 8 === 0).map(p => Math.hypot(p.x - xa, p.z - za))) < 30) continue;
-      dk.push([xa, ya - 3.5, za, xb, yb - 3.5, zb, 20, 5], [xa, ya + .5, za, xb, yb + .5, zb, 20.5, 1]); if (k % 7 === 0 && ya - demAt(xa, za) > 6) pr.push([xa, Math.max(demAt(xa, za), WATER_Y) - 2, za, xa, ya - 3.5, za, 12, 4.5]); } }
+      dk.push([xa, ya - 6, za, xb, yb - 6, zb, 24, 8], [xa, ya + .5, za, xb, yb + .5, zb, 20.5, 1]); if (k % 5 === 0 && ya - demAt(xa, za) > 6) pr.push([xa, Math.max(demAt(xa, za), WATER_Y) - 2, za, xa, ya - 3.5, za, 12, 4.5]); } }
   if (dk.length) { beams(dk, dm, 1); beams(pr, dm, 4); } }
 // water towers (incl. the one by Pearson / Fort Vancouver)
 { const wm = new THREE.MeshStandardMaterial({ color: 0xd7dde2, roughness: .5, metalness: .3 });
@@ -351,6 +357,51 @@ const resamp = (g, st) => { const o = []; for (let k = 0; k < g.length - 1; k++)
   const st = canvasTex(512, 256, (x, w, h) => { x.fillStyle = '#b3122a'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 96px Arial'; x.fillText('VANCOUVER', w / 2, 110); x.font = 'bold 110px Arial'; x.fillText('MALL', w / 2, 220); });
   const pl = new THREE.Mesh(new THREE.BoxGeometry(8, 4, .5), [backMat, backMat, backMat, backMat, signMat(st), signMat(st)]); pl.position.y = 19; pyl.add(pl); pyl.position.set(pp.x, py, pp.z); pyl.rotation.y = T[sj] ? Math.atan2(T[sj].x, T[sj].z) : 0; scene.add(pyl); }
 
+// ---------- whole-loop recognizability: overpasses with street names, interchange flyovers + crossing mainlines, sound walls, BNSF rail on SR-14 ----------
+const nameTex = t => canvasTex(512, 96, (x, w, h) => { x.fillStyle = '#0b6a3a'; x.beginPath(); x.roundRect(0, 0, w, h, 12); x.fill(); x.strokeStyle = '#f2f2f2'; x.lineWidth = 5; x.beginPath(); x.roundRect(6, 6, w - 12, h - 12, 9); x.stroke();
+  x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; let fs = 62; x.font = `bold ${fs}px "Arial Narrow", Arial`; while (x.measureText(t).width > w - 40 && fs > 24) { fs -= 3; x.font = `bold ${fs}px "Arial Narrow", Arial`; } x.fillText(t, w / 2, h / 2 + 3); });
+{ const dk = [], pr = [], pp = [];
+  for (const c of OSM.xing) { const i = c.i, p = P[i], rn = RN[i], t = T[i], nm = abbr(c.name);
+    if (c.over) { const cs = c.dx * rn.x + c.dz * rn.z, sgn = Math.abs(cs) < .35 ? Math.sign(cs || 1) * .35 : cs, yd = p.y + 7.2, hl = clamp(c.len / 2, 30 + EXR[i], 70);
+      dk.push([c.x - c.dx * hl, yd, c.z - c.dz * hl, c.x + c.dx * hl, yd, c.z + c.dz * hl, 13, 1.7], [c.x - c.dx * hl, yd + .85, c.z - c.dz * hl, c.x + c.dx * hl, yd + .85, c.z + c.dz * hl, 13.4, .5]);
+      for (const d of [-8.6, 12.6 + EXR[i], -30]) { const q = d / sgn, x = c.x + c.dx * q, z = c.z + c.dz * q; for (const o of [-4, 4]) pr.push([x + t.x * o, Math.min(p.y, demAt(x, z)) - 1, z + t.z * o, x + t.x * o, yd - .85, z + t.z * o, 1.3, 1.3]); }
+      const g = new THREE.Mesh(new THREE.PlaneGeometry(12, 2.1), signMat(nameTex(nm))); g.position.set(c.x - t.x * 7.0 + rn.x * 1.5, yd + .1, c.z - t.z * 7.0 + rn.z * 1.5); g.rotation.y = Math.atan2(t.x, t.z) + Math.PI; scene.add(g); }
+    else { const s = i * STEP - 70; frame(s, F); const d = 10.4 + exrAt(s), x = F.p.x + F.r.x * d, z = F.p.z + F.r.z * d; pp.push([x, F.p.y - 1, z, x, F.p.y + 3.2, z, .14, .14]);
+      const g = new THREE.Mesh(new THREE.PlaneGeometry(4.6, .86), signMat(nameTex(nm))); g.position.set(x, F.p.y + 3.6, z); g.rotation.y = F.h + Math.PI; scene.add(g); } }
+  beams(dk, conc, 1); beams(pr, conc, 1.3); if (pp.length) beams(pp, steel, .14); }
+// ribbon helper along an xz polyline with per-point y; prof = [[across, dy], ...]
+function ribbon(list, mat, prof, vS = 24) { const pos = [], uv = [], idx = []; let base = 0; const n = prof.length;
+  for (const L of list) { const m = L.length; let v = 0;
+    for (let k = 0; k < m; k++) { const [x, y, z] = L[k], a = L[Math.max(0, k - 1)], b = L[Math.min(m - 1, k + 1)]; let tx = b[0] - a[0], tz = b[2] - a[2]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
+      if (k) v += Math.hypot(x - L[k - 1][0], z - L[k - 1][2]); const w = L[k][3] || 1;
+      for (let j = 0; j < n; j++) { const d = prof[j][0] * w; pos.push(x - tz * d, y + prof[j][1], z + tx * d); uv.push(j / (n - 1), v / vS); }
+      if (k) for (let j = 0; j < n - 1; j++) { const q = base + (k - 1) * n + j; idx.push(q, q + n, q + 1, q + 1, q + n, q + n + 1); } }
+    base += m * n; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  const me = new THREE.Mesh(g, mat); me.receiveShadow = DAY; me.frustumCulled = false; scene.add(me); return me; }
+const pkd = P.filter((_, i) => i % 4 === 0), loopNear = (x, z) => { let bd = 1e18, by = 0; for (const p of pkd) { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; by = p.y; } } return [Math.sqrt(bd), by]; };
+// interchange flyovers (OSM motorway_link bridges, layer-lifted, cleared over the loop) + the crossing mainlines
+{ const top = [], dkL = [], pr = [];
+  for (const f of OSM.fly) { const g = resamp(f.g, 8), m = g.length, gl = g.map(([x, z]) => Math.max(demAt(x, z), WATER_Y) + .5); let cl = 0; const cum = [0]; for (let k = 1; k < m; k++) cum.push(cum[k - 1] + Math.hypot(g[k][0] - g[k - 1][0], g[k][1] - g[k - 1][1])); const tot = cum[m - 1];
+    let lift = 0; if (f.br) { lift = 7.4 * Math.max(1, f.ly); for (const [x, z] of g) { const [d, y] = loopNear(x, z); if (d < 22) lift = Math.max(lift, y + 7.6 - Math.min(...gl)); } }
+    const L = g.map(([x, z], k) => { const tp = f.br ? Math.min(1, Math.min(cum[k], tot - cum[k]) / Math.min(70, tot / 2.2) + .25) : 0; return [x, gl[k] + lift * Math.min(1, tp), z, f.w / 2]; });
+    top.push(L); if (f.br) { dkL.push(L); L.forEach((p, k) => { if (k % 4 === 2 && p[1] - gl[k] > 4) pr.push([p[0], gl[k] - 1, p[2], p[0], p[1] - 1.2, p[2], 2.2, 2.2]); }); } }
+  const rt = canvasTex(128, 256, (x, w, h) => { x.fillStyle = DAY ? '#45454a' : '#16161a'; x.fillRect(0, 0, w, h); for (let i = 0; i < 2500; i++) { const g = (DAY ? 50 : 14) + Math.random() * 40 | 0; x.fillStyle = `rgb(${g},${g},${g + 3})`; x.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } x.fillStyle = '#e6e6e6'; x.fillRect(3, 0, 4, h); x.fillRect(w - 7, 0, 4, h); }, true);
+  ribbon(top, new THREE.MeshStandardMaterial({ map: rt, roughness: .9, color: 0x9a9a9e, side: 2, polygonOffset: true, polygonOffsetFactor: -2 }), [[-1, 0], [1, 0]]);
+  ribbon(dkL, conc, [[-1.08, -1.6], [-1.08, .9], [-1, .9], [-1, 0.05], [-1.08, -1.6], [1.08, -1.6], [1, .05], [1, .9], [1.08, .9], [1.08, -1.6]]);
+  beams(pr, conc, 2.2); }
+// sound walls: tan concrete panels behind the right shoulder on I-205 and SR-500 (gaps at ramps, bridges, overpasses)
+{ const wt = canvasTex(64, 256, (x, w, h) => { x.fillStyle = DAY ? '#b3a58e' : '#3a362f'; x.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * .08})`; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, 0, w, 3); x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(0, 4, w, 2); x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(w * .78, 0, w * .22, h); }, true);
+  const near = new Uint8Array(N); OSM.xing.forEach(c => { for (let q = -12; q <= 12; q++) near[W(c.i + q)] = 1; });
+  const use = i => (SEC[i] === 'I-205' || (SEC[i] === 'SR-500' && (i < 5720 || i > 6060))) && !BRG[i] && !near[i] && !OPEN[W(i - 8)] && !OPEN[i] && !OPEN[W(i + 8)];
+  sweep([[13.6, -3], [13.6, 3.6], [13.9, 3.9], [14.2, 3.6], [14.2, -3]], new THREE.MeshStandardMaterial({ map: wt, roughness: .95 }), { k: 2, use, vScale: 1 / 6 }); }
+// BNSF main line along SR-14 (real OSM track) + a parked freight
+{ const bt = canvasTex(64, 64, (x, w, h) => { x.fillStyle = DAY ? '#7a7166' : '#24211e'; x.fillRect(0, 0, w, h); for (let i = 0; i < 500; i++) { const g = 90 + Math.random() * 60 | 0; x.fillStyle = `rgba(${g},${g - 8},${g - 16},.6)`; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } x.fillStyle = '#3b2a1e'; x.fillRect(8, 0, w - 16, 14); x.fillStyle = '#b8b8bc'; x.fillRect(19, 0, 4, h); x.fillRect(w - 23, 0, 4, h); }, true);
+  const RL = OSM.rail.map(r => resamp(r, 6).map(([x, z]) => [x, Math.max(demAt(x, z), WATER_Y + .5) + 1.1, z, 1]));
+  ribbon(RL, new THREE.MeshStandardMaterial({ map: bt, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }), [[-2.2, 0], [2.2, 0]], 2.4);
+  const sc = r => r.filter(([x, , z]) => { for (let i = 2300; i < 2750; i += 10) if (Math.hypot(P[i].x - x, P[i].z - z) < 110) return true; return false; }).length, lg = RL.reduce((a, b) => sc(b) > sc(a) ? b : a, []), cars = []; const cols = [0x8a3a22, 0x2c4a6a, 0x5b5f63, 0x7a2f1c, 0x335533, 0x9a6a2a];
+  for (let k = 20; k + 3 < lg.length && cars.length < (LOW ? 28 : 48); k += 3) { const a = lg[k], b = lg[k + 3]; cars.push([a[0], a[1] + .9, a[2], b[0], b[1] + .9, b[2], 3, 4]); }
+  if (cars.length) { const im = beams(cars, new THREE.MeshStandardMaterial({ roughness: .8 }), 3); const c = new THREE.Color(); cars.forEach((_, i) => im.setColorAt(i, c.setHex(i < 3 ? 0xd2691e : cols[i % cols.length]))); } }
 // ---------- fir tree cards (instanced crossed quads) ----------
 { const firTex = canvasTex(128, 256, (x, w, h) => { x.clearRect(0, 0, w, h); for (let i = 0; i < 26; i++) { const y = 20 + i * 8.6, hw = 6 + i * 2.2; x.fillStyle = `rgb(${8 + Math.random() * 10 | 0},${22 + Math.random() * 16 | 0},${14 + Math.random() * 10 | 0})`; x.beginPath(); x.moveTo(w / 2, y - 14); x.lineTo(w / 2 - hw, y + 12); x.lineTo(w / 2 + hw, y + 12); x.fill(); } x.fillStyle = '#1a120c'; x.fillRect(w / 2 - 4, h - 26, 8, 26); });
   const g1 = new THREE.PlaneGeometry(1, 1); g1.translate(0, .5, 0); const g2 = g1.clone().rotateY(Math.PI / 2); const gg = new THREE.BufferGeometry();
