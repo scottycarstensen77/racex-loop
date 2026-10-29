@@ -1,0 +1,55 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="RaceX"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="../assets/icon-180.png"><meta name="theme-color" content="#05060a">
+<title>RaceX: Vancouver Night Loop</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0;width:100%;background:#05060a;font-family:'Arial Black',Impact,system-ui,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;color:#fff}
+#c,#fx{position:fixed;inset:0;width:100%;height:100%;display:block}#fx{pointer-events:none}
+.hud{position:fixed;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,.9)}
+#tl{top:calc(8px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left))}
+#mm{width:130px;height:130px;border-radius:50%;background:radial-gradient(rgba(0,20,40,.75),rgba(0,0,0,.55));border:2px solid rgba(0,229,255,.6);box-shadow:0 0 14px rgba(0,229,255,.35)}
+#tr{top:calc(8px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));text-align:right;font-style:italic}
+#tr .big{font-size:26px;letter-spacing:1px}#tr .lbl{font-size:11px;color:#00e5ff;letter-spacing:2px}#tr .sm{font-size:14px;color:#ddd}
+#gauge{top:calc(2px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:150px;height:98px;opacity:.95}
+#seg{top:24%;width:100%;text-align:center;font-size:48px;font-style:italic;letter-spacing:3px;color:#fff;opacity:0;transition:opacity .35s,transform .35s;transform:scale(.9);text-shadow:0 0 18px #ff2bd6,0 0 4px #000}
+#seg.on{opacity:1;transform:scale(1)}#seg small{display:block;font-size:14px;color:#00e5ff;letter-spacing:6px}
+.btn{position:fixed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1px;color:#fff;background:rgba(10,14,24,.45);border:2px solid rgba(255,255,255,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.btn.on{background:rgba(255,255,255,.3);transform:scale(.94)}
+#steer{position:fixed;left:0;bottom:0;width:42%;height:62%;}
+#knob{position:fixed;width:150px;height:150px;left:calc(26px + env(safe-area-inset-left));bottom:calc(20px + env(safe-area-inset-bottom));border-radius:50%;border:2px solid rgba(0,229,255,.45);background:rgba(0,20,40,.25);pointer-events:none}
+#nub{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:radial-gradient(#00e5ff,#00708a);box-shadow:0 0 18px #00e5ff}
+#gas{width:96px;height:96px;right:calc(18px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));border-color:#33ff88;box-shadow:0 0 14px rgba(51,255,136,.4)}
+#brk{width:76px;height:76px;right:calc(128px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));border-color:#ff3355}
+#nos{width:70px;height:70px;right:calc(40px + env(safe-area-inset-right));bottom:calc(134px + env(safe-area-inset-bottom));border-color:#00e5ff;box-shadow:0 0 14px rgba(0,229,255,.5)}
+#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at center,rgba(20,0,40,.55),rgba(0,0,0,.92));padding:18px;z-index:5}
+#start h1{margin:0;font-size:46px;font-style:italic;letter-spacing:4px;background:linear-gradient(90deg,#00e5ff,#ff2bd6);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 12px rgba(255,43,214,.6))}
+#start p{margin:6px;font-family:system-ui,sans-serif;color:#cfd8e3;font-size:14px}
+#go{margin-top:14px;font:inherit;font-size:22px;letter-spacing:4px;padding:14px 46px;border:0;border-radius:6px;color:#000;background:linear-gradient(90deg,#00e5ff,#ff2bd6);box-shadow:0 0 24px rgba(255,43,214,.6)}
+#load{font-family:system-ui;font-size:12px;color:#8aa}
+#credit{margin:12px auto 0;max-width:90%;font:10px system-ui;color:rgba(255,255,255,.55);white-space:normal;text-align:center}
+#attr{position:fixed;bottom:calc(1px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font:8px system-ui;color:rgba(255,255,255,.45);pointer-events:none;white-space:nowrap}
+#rot{display:none;position:fixed;inset:0;background:#05060a;align-items:center;justify-content:center;font-size:22px;z-index:9;text-align:center}
+@media (orientation:portrait) and (max-width:760px){#rot{display:flex}}
+</style></head><body>
+<canvas id="c"></canvas><canvas id="fx"></canvas>
+<div class="hud" id="tl"><canvas id="mm" width="260" height="260"></canvas></div>
+<div class="hud" id="tr"><div class="lbl">LAP <span id="lapn">1</span> · <span id="segn">SR-500</span></div><div class="big" id="ltime">0:00.00</div><div class="sm">BEST <span id="best">--</span> · LAST <span id="last">--</span></div><div class="sm" id="pos"></div></div>
+<canvas class="hud" id="gauge" width="460" height="300"></canvas>
+<div class="hud" id="seg"></div>
+<div id="steer"></div><div id="knob"><div id="nub"></div></div>
+<div class="btn" id="brk">BRAKE<br>DRIFT</div><div class="btn" id="gas">GAS</div><div class="btn" id="nos">NOS</div>
+<div id="start"><h1>RACEX</h1><p style="letter-spacing:4px;color:#00e5ff">VANCOUVER · FREEWAY LOOP</p>
+<p>SR-500 W → I-5 S → SR-14 E → I-205 N · real OpenStreetMap geometry · <span id="mi"></span> mi</p>
+<p style="font-size:12px;opacity:.8">Left thumb: drag to steer · Right: GAS / BRAKE (hold while steering to drift) / NOS<br>Keyboard: arrows, Space = drift, Shift = nitro</p>
+<button id="go">RACE</button><div id="load">loading car…</div><div id="modes" style="margin-top:10px;font:600 13px Arial;letter-spacing:1px"><a id="mDay" href="./" style="color:#ffd27a;margin:0 10px">☀ GOLDEN HOUR</a><a id="mNight" href="./?night" style="color:#7ff3ff;margin:0 10px">☾ NIGHT</a><a href="./?low" style="color:#ccc;margin:0 10px">LOW-END PHONE</a></div><div id="ioshint" style="display:none;margin:10px auto 0;max-width:90%;font:600 12px Arial;color:#ffd27a">For full screen: tap Share → Add to Home Screen, then launch from the icon. <a href="#" id="ioshintx" style="color:#aaa">✕</a></div><div id="credit"></div></div>
+<div id="attr">Imagery USGS · © OpenStreetMap</div>
+<div id="rot">↻ Turn your phone sideways to race</div>
+<script src="config.js"></script>
+<script type="importmap">{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+ "3d-tiles-renderer":"https://esm.sh/3d-tiles-renderer@0.4.18?external=three",
+ "3d-tiles-renderer/plugins":"https://esm.sh/3d-tiles-renderer@0.4.18/plugins?external=three"
+}}</script>
+<script type="module" src="game.js"></script>
+<script>(function(){var ios=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);var sa=navigator.standalone||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches;if(ios&&!sa&&!localStorage.racexHint){var h=document.getElementById('ioshint');h.style.display='block';document.getElementById('ioshintx').onclick=function(e){e.preventDefault();localStorage.racexHint=1;h.style.display='none'}}function fit(){document.documentElement.style.setProperty('--vh',innerHeight+'px');document.body.style.height=innerHeight+'px';scrollTo(0,0)}addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});visualViewport&&visualViewport.addEventListener('resize',fit);fit();document.addEventListener('touchmove',function(e){if(e.touches.length>1||!e.target.closest('a,button'))e.preventDefault()},{passive:false});document.addEventListener('gesturestart',function(e){e.preventDefault()})})()</script></body></html>

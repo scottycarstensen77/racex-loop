@@ -259,7 +259,7 @@ let carReady = false;
 {
   const draco = new DRACOLoader(); draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
   const gl = new GLTFLoader(); gl.setDRACOLoader(draco);
-  gl.load('assets/ferrari.glb', g => {
+  gl.load('../assets/ferrari.glb', g => {
     const m = g.scene.children[0];
     const body = new THREE.MeshPhysicalMaterial({ color: 0xd0101a, metalness: 1, roughness: .45, clearcoat: 1, clearcoatRoughness: .03 });
     const detail = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: .35 });

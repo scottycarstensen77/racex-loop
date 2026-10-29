@@ -7,7 +7,7 @@ const tileXY = (x, y, z) => { // local (x east, y north) -> web-mercator tile co
 };
 const fromTile = (tx, ty, z) => { const n = 2 ** z, lon = tx / n * 360 - 180, lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * ty / n))) * 180 / Math.PI; return [(lon - LON0) * KX, (lat - LAT0) * KY]; };
 
-export async function buildScenery(scene, R, { low = false, base = 'assets/sc/' } = {}) {
+export async function buildScenery(scene, R, { low = false, base = '../assets/sc/' } = {}) {
   const [meta, demBuf, sc] = await Promise.all([
     fetch(base + 'meta.json').then(r => r.json()),
     fetch(base + 'dem.bin').then(r => r.arrayBuffer()),
