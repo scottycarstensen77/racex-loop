@@ -38,7 +38,7 @@ const R = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-per
 const DPR = Math.min(devicePixelRatio, LOW ? 1 : MOBILE ? 1.3 : 1.6);
 R.setPixelRatio(DPR); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = DAY ? .95 : 1.05; R.shadowMap.enabled = DAY; R.shadowMap.type = THREE.PCFShadowMap; R.outputColorSpace = THREE.SRGBColorSpace;
 document.body.prepend(R.domElement);
-const scene = new THREE.Scene(); scene.background = new THREE.Color(DAY ? 0x9cc2e6 : 0x05060d); scene.fog = DAY ? new THREE.FogExp2(0xb9cfe2, 0.00042) : new THREE.FogExp2(0x0a0b18, 0.0026);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(DAY ? 0x9cc2e6 : 0x05060d); scene.fog = DAY ? new THREE.FogExp2(0xb9cfe2, 0.00011) : new THREE.FogExp2(0x0a0b18, 0.0026);
 const cam = new THREE.PerspectiveCamera(62, 2, 0.5, 12000);
 
 const SUN = new THREE.Vector3(-0.52, 0.44, 0.74).normalize(); // ~3pm late-Oct sun, SSW (+z = south here)
@@ -380,7 +380,7 @@ function showCar() { models.forEach((m, i) => m.visible = i === carSel); }
 garage(); showCar();
 function ready() { $('load').textContent = 'ready'; window.__ready = true; }
 function reset() { Object.assign(S, { s: 20, d: LANES[1], psi: 0, v: 0, slip: 0, gear: 1, nos: 1, score: 0, combo: 1, comboT: 0, heat: Q.has('heat') ? 3.5 : 0, shake: 0, spin: 0, t: 0, top: 0, nm: 0, bestCombo: 1, drift: 0, done: false, crashT: 0, busted: 0 });
-  traffic.forEach((c, i) => { c.s = 120 + i * 210 + rnd(-40, 40); c.lane = i % 3; c.d = LANES[c.lane]; c.passed = false; c.nm = false; });
+  traffic.forEach((c, i) => { c.s = 120 + i * 85 + rnd(-25, 25); c.lane = i % 3; c.d = LANES[c.lane]; c.passed = false; c.nm = false; });
   if (Q.has('at')) { S.s = +Q.get('at'); traffic.forEach((c, i) => { c.s = S.s + 40 + i * 70 + rnd(-15, 15); }); }
   cop.on = false; cop.m.visible = false; }
 function go() { initAudio(); AC?.resume(); $('start').style.display = 'none'; $('end').style.display = 'none'; reset(); S.run = true; if (Q.has('v')) S.v = +Q.get('v');
@@ -433,7 +433,7 @@ function update(dt) {
     if (c.tlc < 0) { c.tlc = rnd(5, 15); const nl = clamp(c.lane + (Math.random() < .5 ? -1 : 1), 0, 2); const ok = !traffic.some(o => o !== c && o.lane === nl && Math.abs(o.s - c.s) < 25) && Math.abs(c.s - S.s) > 18; if (ok) c.lane = nl; }
     c.d = lerp(c.d, LANES[c.lane], dt * .8);
     const ds = c.s - S.s;
-    if (ds < -140 || ds > 900) { c.s = S.s + rnd(260, 520); c.lane = Math.floor(rnd(0, 3)); c.d = LANES[c.lane]; c.passed = false; c.minD = 99; if (traffic.some(o => o !== c && o.lane === c.lane && Math.abs(o.s - c.s) < 30)) c.s += 45; }
+    if (ds < -140 || ds > 2000) { c.s = S.s + rnd(700, 1800); c.lane = Math.floor(rnd(0, 3)); c.d = LANES[c.lane]; c.passed = false; c.minD = 99; if (traffic.some(o => o !== c && o.lane === c.lane && Math.abs(o.s - c.s) < 30)) c.s += 45; }
     const dd = Math.abs(c.d - S.d), hitL = c.l / 2 + 2.25, hitW = c.w / 2 + .92;
     if (Math.abs(ds) < hitL + 2) c.minD = Math.min(c.minD ?? 99, dd);
     if (Math.abs(ds) < hitL && dd < hitW && S.t - (c.hit || -9) > 1.2) { // crash
@@ -443,7 +443,7 @@ function update(dt) {
     frame(c.s, F); c.m.position.copy(F.p).addScaledVector(F.r, c.d); c.m.position.y = F.p.y + (S.t - (c.hit || -9) < .4 ? .05 : 0); c.m.rotation.y = F.h - (LANES[c.lane] - c.d) * .03;
   }
   S.comboT -= dt; if (S.comboT <= 0 && S.combo > 1) { S.combo = 1; }
-  for (const o of oncoming) { o.s -= o.v * dt; if (o.s < S.s - 200) o.s = S.s + rnd(500, 900); frame(o.s, F); o.g.position.copy(F.p).addScaledVector(F.r, o.d).setY(F.p.y); o.g.rotation.y = F.h + Math.PI; }
+  for (const o of oncoming) { o.s -= o.v * dt; if (o.s < S.s - 200) o.s = S.s + rnd(900, 1900); frame(o.s, F); o.g.position.copy(F.p).addScaledVector(F.r, o.d).setY(F.p.y); o.g.rotation.y = F.h + Math.PI; }
   // heat & cop
   if (S.v > 53.6) S.heat = Math.min(5, S.heat + dt * .3); else if (!cop.on) S.heat = Math.max(0, S.heat - dt * .08);
   if (S.heat >= 1 && !cop.on && S.s > 200) { cop.on = true; cop.s = S.s - 160; cop.d = S.d; cop.v = S.v + 5; cop.m.visible = true; msg('PURSUIT!', 1800); }
@@ -478,12 +478,12 @@ function camUpdate(dt, k) {
   tmp.copy(player.position).addScaledVector(fwd, -back); tmp.y += hgt; cam.position.lerp(tmp, Math.min(1, dt * 9));
   const sh = S.shake * .35; cam.position.x += rnd(-sh, sh); cam.position.y += rnd(-sh, sh) * .6;
   const vib = Math.min(.045, .0035 * (v / 20) ** 2); const tt = S.t * 31; cam.position.y += (Math.sin(tt) * .6 + Math.sin(tt * 2.37 + 1) * .4) * vib; cam.position.x += Math.sin(tt * 1.71) * vib * .5;
-  tmp2.copy(player.position).addScaledVector(fwd, 26); tmp2.y += .35; cam.lookAt(tmp2); // aim well ahead: car sits in lower third
+  tmp2.copy(player.position).addScaledVector(fwd, 70).lerp(at(Math.min(L - 1, S.s + 70), S.d * .6, 0), .5); tmp2.y = lerp(player.position.y, tmp2.y, .5) + .9; cam.lookAt(tmp2); // aim ~70 m down the road (follows curves)
   const fov = (innerWidth / innerHeight > 1.9 ? 58 : 64) + clamp(v - 8, 0, 80) * .2 + (k.nosOn ? 8 : 0); cam.fov = lerp(cam.fov, fov, dt * 3); cam.updateProjectionMatrix();
 }
 function fxUpdate(dt, k) {
   const sp = clamp((S.v - 28) / 55, 0, 1); fxPass.uniforms.amt.value = lerp(fxPass.uniforms.amt.value, k.nosOn ? .085 : 0, dt * 4);
-  fxPass.uniforms.ca.value = .004 + sp * .01 + fxPass.uniforms.amt.value * .5 + S.shake * .04; fxPass.uniforms.nos.value = lerp(fxPass.uniforms.nos.value, k.nosOn ? 1 : 0, dt * 5); fxPass.uniforms.t.value = S.t % 10;
+  fxPass.uniforms.ca.value = MOBILE ? 0 : .004 + sp * .01 + fxPass.uniforms.amt.value * .5 + S.shake * .04; fxPass.uniforms.nos.value = lerp(fxPass.uniforms.nos.value, k.nosOn ? 1 : 0, dt * 5); fxPass.uniforms.t.value = S.t % 10;
   bloom.strength = (DAY ? .22 : .8) + (k.nosOn ? .25 : 0);
   // rain streaks around camera, stretched by speed
   const c = cam.position, yaw = F.h, sx = Math.sin(yaw), cz = Math.cos(yaw), len = .5 + Math.min(S.v, 60) * .012;
