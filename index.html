@@ -11,10 +11,10 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 #score i{font-size:12px;color:#7ff3ff;letter-spacing:2px}
 #combo{font-size:16px;color:#ffd200;margin-top:2px;opacity:0;transition:opacity .2s}
 #combobar{width:110px;height:4px;background:rgba(255,255,255,.15);margin-top:3px}#combobar div{height:100%;width:0;background:#ffd200}
-#heat{top:calc(8px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));text-align:right;font-size:11px;letter-spacing:2px;color:#ff4a6a}
+#heat{color:#fff!important;top:calc(8px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));text-align:right;font-size:11px;letter-spacing:2px;color:#ff4a6a}
 #heat .bars{display:flex;gap:3px;justify-content:flex-end;margin-top:3px}#heat .bars span{width:16px;height:7px;background:rgba(255,255,255,.15);transform:skewX(-20deg)}
 #prog{width:150px;height:3px;background:rgba(255,255,255,.15);margin:6px 0 0 auto}#prog div{height:100%;width:0;background:#7ff3ff}
-#dist{font-size:10px;color:#ddd;margin-top:3px}#mm{display:block;margin:4px 0 0 auto;width:150px;height:110px;background:rgba(0,0,0,.35);border-radius:8px}@media (max-height:380px){#mm{width:120px;height:88px}}
+#dist{font-size:10px;color:#fff;margin-top:4px;line-height:14px;background:rgba(0,0,0,.45);padding:2px 6px;border-radius:6px;display:inline-block;white-space:nowrap}#mm{display:block;position:relative;margin:8px 0 0 auto;width:150px;height:110px;background:rgba(0,0,0,.35);border-radius:8px}@media (max-height:380px){#mm{width:120px;height:88px}}
 #speedo{right:calc(14px + env(safe-area-inset-right));bottom:calc(178px + env(safe-area-inset-bottom));text-align:right;font-style:italic;line-height:1}
 #spd{font-size:34px;color:#fff}#unit{font-size:10px;color:#7ff3ff;letter-spacing:2px}#gear{font-size:18px;color:#ff2a6d;margin-left:6px}
 #nos{width:120px;height:6px;background:rgba(255,255,255,.15);margin-top:5px;margin-left:auto;transform:skewX(-20deg)}#nos div{height:100%;width:100%;background:linear-gradient(90deg,#00b7ff,#a0f)}
@@ -43,7 +43,7 @@ h1{margin:0;font-size:40px;font-style:italic;letter-spacing:4px;background:linea
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head><body>
 <div id="score" class="hud"><i>SCORE</i><b id="sc">0</b><div id="combo">x1</div><div id="combobar"><div></div></div></div>
-<div id="heat" class="hud">HEAT<div class="bars"><span></span><span></span><span></span><span></span><span></span></div><div id="prog"><div></div></div><div id="dist">SR-500 WEST</div><canvas id="mm" width="150" height="110"></canvas></div>
+<div id="heat" class="hud"><div id="prog"><div></div></div><div id="dist">SR-500 WEST</div><canvas id="mm" width="150" height="110"></canvas></div>
 <div id="speedo" class="hud"><span id="spd">0</span><span id="gear">N</span><div id="unit">MPH</div><div id="nos"><div></div></div></div>
 <div id="pop" class="hud"></div><div id="msg" class="hud"></div>
 <div id="pad"></div><div id="knob"><div></div></div>
@@ -52,7 +52,7 @@ h1{margin:0;font-size:40px;font-style:italic;letter-spacing:4px;background:linea
 <div id="garage"></div>
 <button class="go" id="go">RACE</button><div id="load">loading…</div>
 <div id="hint"><b>For full screen:</b> open this page in <b>Safari</b>, tap <b>Share → Add to Home Screen</b>, then launch from the icon. <button id="copyl" style="margin-left:6px;padding:4px 10px;border-radius:8px;border:1px solid #0ff;background:#022;color:#0ff;font:inherit">Copy link</button> <a href="#" id="hintx" style="color:#aaa">✕</a></div>
-<div class="small">Weave traffic for NEAR MISS combos · hold BRAKE + steer to drift · go over 120 mph and the cops come · one lap of the real loop. Road geometry © OpenStreetMap contributors · elevation USGS 3DEP.</div></div>
+<div class="small">Weave traffic for NEAR MISS combos · hold BRAKE + steer to drift · one lap of the real loop. Road geometry © OpenStreetMap contributors · elevation USGS 3DEP.</div></div>
 <div id="end" style="display:none"><h1 id="endt">FINISH</h1><div id="res"></div><button class="go" id="again">RUN IT BACK</button></div>
 <div id="rot" style="display:none;position:fixed;inset:0;z-index:99;background:#030308;color:#fff;font:600 20px system-ui;align-items:center;justify-content:center;flex-direction:column;text-align:center"><div style="font-size:54px;transform:rotate(90deg)">📱</div><div style="margin-top:14px">Rotate your phone sideways</div></div>
 <script type="module" src="loop.js"></script>

@@ -54,6 +54,7 @@ for e in B:
     qq=q-q.mean(0);u,sv,vt=np.linalg.svd(qq,full_matrices=False);a=math.atan2(vt[0][1],vt[0][0])
     pr=qq@vt.T;w_=np.ptp(pr[:,0]);l_=np.ptp(pr[:,1])
     if w_<4 or l_<4: continue
+    if dd-0.5*math.hypot(w_,l_)<45: continue
     tg=e['tags'];ht=float(tg.get('height','0').split()[0] or 0) if tg.get('height','').replace('.','',1).split(' ')[0].isdigit() else 0
     if not ht: ht=float(tg['building:levels'])*3.2 if tg.get('building:levels','').isdigit() else (4+min(w_*l_,4000)/600)
     bl.append([round(cx,1),round(-cy,1),round(w_,1),round(l_,1),round(-a,3),round(min(ht,90),1),round(dd)])
