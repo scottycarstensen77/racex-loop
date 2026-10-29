@@ -9,3 +9,6 @@ Real OpenStreetMap geometry of SR-500 W → I-5 S → SR-14 E → I-205 N (16.53
    or set `googleTilesKey` in `config.js`.
 3. Alignment tweaks: `?h=40` (road height, meters) and `?rot=0` (degrees), or in `config.js`.
 Add `?low` for weaker phones. See CREDITS.md.
+
+## Modes
+- `./` golden hour (default) · `./?night` night · `./?low` low-end phone mode
