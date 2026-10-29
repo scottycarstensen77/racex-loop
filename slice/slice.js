@@ -288,7 +288,7 @@ const CARS = [
   { name: 'FERRARI 458', sub: 'V8 · 562 HP', top: 88, acc: 13.5, grip: 1.0, drift: .8, nos: 1.0, stats: [.95, .85, .7] },
   { name: 'RX-14 TUNER', sub: 'TWIN-TURBO · WIDEBODY', top: 80, acc: 15, grip: .85, drift: 1.25, nos: 1.3, stats: [.8, .92, .95] },
 ];
-let carSel = +(Q.get('car') ?? localStorage.racexSliceCar ?? 0) || 0;
+let carSel = +(Q.get('car') ?? localStorage.racexSliceCar2 ?? 0) || 0;
 const player = new THREE.Group(); player.rotation.order = 'YXZ'; scene.add(player);
 const body = new THREE.Group(); player.add(body);
 const models = [new THREE.Group(), tuner()]; models.forEach(m => body.add(m));
@@ -375,7 +375,7 @@ function msg(t, ms = 1500) { $('msg').textContent = t; clearTimeout(msg.t); msg.
 function addScore(p, label, sub) { S.score += Math.round(p * S.combo); popup(`${label} +${Math.round(p * S.combo)}`, sub); }
 
 // garage
-function garage() { const g = $('garage'); g.innerHTML = ''; CARS.forEach((c, i) => { const d = document.createElement('div'); d.className = 'card' + (i === carSel ? ' sel' : ''); d.innerHTML = `<b>${c.name}</b><span style="color:#ff2a6d">${c.sub}</span>` + ['TOP SPEED', 'ACCEL', 'DRIFT'].map((n, k) => `<div class="st">${n}<i><u style="width:${c.stats[k] * 100}%"></u></i></div>`).join(''); d.onclick = () => { carSel = i; localStorage.racexSliceCar = i; garage(); showCar(); }; g.appendChild(d); }); }
+function garage() { const g = $('garage'); g.innerHTML = ''; CARS.forEach((c, i) => { const d = document.createElement('div'); d.className = 'card' + (i === carSel ? ' sel' : ''); d.innerHTML = `<b>${c.name}</b><span style="color:#ff2a6d">${c.sub}</span>` + ['TOP SPEED', 'ACCEL', 'DRIFT'].map((n, k) => `<div class="st">${n}<i><u style="width:${c.stats[k] * 100}%"></u></i></div>`).join(''); d.onclick = () => { carSel = i; localStorage.racexSliceCar2 = i; garage(); showCar(); }; g.appendChild(d); }); }
 function showCar() { models.forEach((m, i) => m.visible = i === carSel); }
 garage(); showCar();
 function ready() { $('load').textContent = 'ready'; window.__ready = true; }
@@ -474,11 +474,11 @@ function update(dt) {
 }
 function camUpdate(dt, k) {
   frame(S.s, F); const v = S.v, yaw = player.rotation.y; fwd.set(Math.sin(yaw * .35 + F.h * .65), 0, Math.cos(yaw * .35 + F.h * .65));
-  const back = 5.0 + v * .012 + (k.nosOn ? .9 : 0), hgt = 1.42 + v * .0025;
+  const back = 6.6 + v * .01 + (k.nosOn ? .8 : 0), hgt = 2.35 + v * .004; // high enough to see traffic over the car
   tmp.copy(player.position).addScaledVector(fwd, -back); tmp.y += hgt; cam.position.lerp(tmp, Math.min(1, dt * 9));
   const sh = S.shake * .35; cam.position.x += rnd(-sh, sh); cam.position.y += rnd(-sh, sh) * .6;
   const vib = Math.min(.045, .0035 * (v / 20) ** 2); const tt = S.t * 31; cam.position.y += (Math.sin(tt) * .6 + Math.sin(tt * 2.37 + 1) * .4) * vib; cam.position.x += Math.sin(tt * 1.71) * vib * .5;
-  tmp2.copy(player.position).addScaledVector(fwd, 8); tmp2.y += .85; cam.lookAt(tmp2);
+  tmp2.copy(player.position).addScaledVector(fwd, 26); tmp2.y += .35; cam.lookAt(tmp2); // aim well ahead: car sits in lower third
   const fov = (innerWidth / innerHeight > 1.9 ? 58 : 64) + clamp(v - 8, 0, 80) * .2 + (k.nosOn ? 8 : 0); cam.fov = lerp(cam.fov, fov, dt * 3); cam.updateProjectionMatrix();
 }
 function fxUpdate(dt, k) {
