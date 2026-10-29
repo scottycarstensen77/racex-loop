@@ -1,9 +1,9 @@
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05060a">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="RaceX"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icon-180.png"><meta name="theme-color" content="#05060a">
 <title>RaceX: Vancouver Night Loop</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#05060a;font-family:'Arial Black',Impact,system-ui,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;color:#fff}
+*{box-sizing:border-box}html,body{margin:0;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0;width:100%;background:#05060a;font-family:'Arial Black',Impact,system-ui,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;color:#fff}
 #c,#fx{position:fixed;inset:0;width:100%;height:100%;display:block}#fx{pointer-events:none}
 .hud{position:fixed;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,.9)}
 #tl{top:calc(8px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left))}
@@ -41,15 +41,15 @@
 <div id="start"><h1>RACEX</h1><p style="letter-spacing:4px;color:#00e5ff">VANCOUVER · FREEWAY LOOP</p>
 <p>SR-500 W → I-5 S → SR-14 E → I-205 N · real OpenStreetMap geometry · <span id="mi"></span> mi</p>
 <p style="font-size:12px;opacity:.8">Left thumb: drag to steer · Right: GAS / BRAKE (hold while steering to drift) / NOS<br>Keyboard: arrows, Space = drift, Shift = nitro</p>
-<button id="go">RACE</button><div id="load">loading car…</div><div id="modes" style="margin-top:10px;font:600 13px Arial;letter-spacing:1px"><a id="mDay" href="./" style="color:#ffd27a;margin:0 10px">☀ GOLDEN HOUR</a><a id="mNight" href="./?night" style="color:#7ff3ff;margin:0 10px">☾ NIGHT</a><a href="./?low" style="color:#ccc;margin:0 10px">LOW-END PHONE</a></div><div id="credit"></div></div>
+<button id="go">RACE</button><div id="load">loading car…</div><div id="modes" style="margin-top:10px;font:600 13px Arial;letter-spacing:1px"><a id="mDay" href="./" style="color:#ffd27a;margin:0 10px">☀ GOLDEN HOUR</a><a id="mNight" href="./?night" style="color:#7ff3ff;margin:0 10px">☾ NIGHT</a><a href="./?low" style="color:#ccc;margin:0 10px">LOW-END PHONE</a></div><div id="ioshint" style="display:none;margin:10px auto 0;max-width:90%;font:600 12px Arial;color:#ffd27a">For full screen: tap Share → Add to Home Screen, then launch from the icon. <a href="#" id="ioshintx" style="color:#aaa">✕</a></div><div id="credit"></div></div>
 <div id="attr">Imagery USGS · © OpenStreetMap</div>
 <div id="rot">↻ Turn your phone sideways to race</div>
 <script src="config.js"></script>
 <script type="importmap">{"imports":{
  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
- "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
  "3d-tiles-renderer":"https://esm.sh/3d-tiles-renderer@0.4.18?external=three",
  "3d-tiles-renderer/plugins":"https://esm.sh/3d-tiles-renderer@0.4.18/plugins?external=three"
 }}</script>
 <script type="module" src="game.js"></script>
-</body></html>
+<script>(function(){var ios=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);var sa=navigator.standalone||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches;if(ios&&!sa&&!localStorage.racexHint){var h=document.getElementById('ioshint');h.style.display='block';document.getElementById('ioshintx').onclick=function(e){e.preventDefault();localStorage.racexHint=1;h.style.display='none'}}function fit(){document.documentElement.style.setProperty('--vh',innerHeight+'px');document.body.style.height=innerHeight+'px';scrollTo(0,0)}addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});visualViewport&&visualViewport.addEventListener('resize',fit);fit();document.addEventListener('touchmove',function(e){if(e.touches.length>1||!e.target.closest('a,button'))e.preventDefault()},{passive:false});document.addEventListener('gesturestart',function(e){e.preventDefault()})})()</script></body></html>

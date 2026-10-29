@@ -212,7 +212,7 @@ const fallback = new THREE.Group(); scene.add(fallback); fallback.visible = fals
 }
 
 // ---------- Google Photorealistic 3D Tiles (only when a key exists) ----------
-let tiles = null, scen = null;
+let tiles = null, scen = null; const tilesWrap = new THREE.Group(); tilesWrap.rotation.y = Math.PI; /* plugin frame is X=west,Z=north; ours X=east,Z=south */
 buildScenery(scene, R, { low: LOW }).then(s => { scen = s; s.root.userData.setNight(NIGHT); console.log('[RaceX] scenery', s.root.userData.buildings, 'buildings', s.root.userData.trees, 'trees'); window.__scen = s.root.userData; document.getElementById('load').textContent = carReady ? 'ready' : 'loading car…'; })
   .catch(e => { console.error('scenery failed', e); fallback.visible = true; });
 async function initTiles() {
@@ -230,14 +230,27 @@ async function initTiles() {
     tiles.registerPlugin(new ReorientationPlugin({ lat: lat0 * Math.PI / 180, lon: lon0 * Math.PI / 180, height: h, up: '+y', recenter: true, azimuth: rot * Math.PI / 180 }));
     tiles.errorTarget = LOW ? 32 : (innerWidth < 1000 ? 20 : 12); tiles.maxDepth = 30; if (tiles.lruCache) { tiles.lruCache.minSize = 300; tiles.lruCache.maxSize = LOW ? 500 : 900; }
     tiles.setCamera(cam); tiles.setResolutionFromRenderer(cam, R);
-    scene.add(tiles.group);
+    tilesWrap.add(tiles.group); scene.add(tilesWrap);
     // keep road on top; hide fallback ground/lights but keep street lamps & walls
-    if (scen) scen.root.visible = false; fallback.visible = false;
+    tiles.addEventListener('load-model', () => { tilesLoaded++; if (tilesLoaded > 25 && !tilesShown) { tilesShown = true; const hide = () => { if (scen) { scen.root.userData.hideForTiles ? scen.root.userData.hideForTiles() : (scen.root.visible = false); } else setTimeout(hide, 500); }; hide(); fallback.visible = false; } });
+    window.__tiles = () => ({ loaded: tilesLoaded, shown: tilesShown, off: +tilesWrap.position.y.toFixed(2), calib: calibN, downloading: tiles.stats ? tiles.stats.downloading : -1, parsing: tiles.stats ? tiles.stats.parsing : -1 });
+    if (Q.has('photoroad')) { road.material.transparent = true; road.material.opacity = 0.35; road.material.depthWrite = false; }
     scene.fog.density = 0.00012;
     console.log('[RaceX] Google Photorealistic 3D Tiles enabled');
   } catch (e) { console.warn('3D Tiles failed, using night-city fallback', e); }
 }
 
+let tilesLoaded = 0, tilesShown = false, calibN = 0, calibF = 0; const rc = new THREE.Raycaster(); rc.firstHitOnly = true;
+function calibTiles() {
+  if (!tilesShown || Q.has('nocalib') || (++calibF % 12)) return;
+  rc.set(new THREE.Vector3(S.x, S.y + 250, S.z), new THREE.Vector3(0, -1, 0)); rc.far = 600;
+  const hits = rc.intersectObject(tiles.group, true); if (!hits.length) return;
+  let best = null; for (const h of hits) { const d = Math.abs(h.point.y - S.y); if (d < 80 && (!best || d < Math.abs(best.point.y - S.y))) best = h; }
+  if (!best) best = hits[0];
+  const err = (S.y - 0.25) - best.point.y; // photo road 25 cm under ribbon
+  if (Math.abs(err) > 120) return;
+  tilesWrap.position.y += err * (calibN < 5 ? 1 : 0.15); calibN++;
+}
 // ---------- car ----------
 const car = new THREE.Group(); car.rotation.order = "YXZ"; scene.add(car);
 const carBody = new THREE.Group(); car.add(carBody);
@@ -284,7 +297,7 @@ function resize() {
   fx.width = w; fx.height = h; if (tiles) tiles.setResolutionFromRenderer(cam, R);
 }
 const fx = document.getElementById('fx'), fxc = fx.getContext('2d');
-addEventListener('resize', resize); resize();
+addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 350)); window.visualViewport?.addEventListener('resize', resize); resize();
 
 // ---------- input ----------
 const K = {}; addEventListener('keydown', e => { K[e.code] = 1; }); addEventListener('keyup', e => { K[e.code] = 0; });
@@ -473,7 +486,7 @@ function frame(now) {
   camLook.set(S.x + Math.sin(S.h) * (6 + CH), cy + 1.1, S.z + Math.cos(S.h) * (6 + CH)); cam.lookAt(camLook);
   const fovT = 62 + Math.min(1, sp / 80) * 18 + nosK * 10; cam.fov += (fovT - cam.fov) * Math.min(1, dt * 4); cam.updateProjectionMatrix();
   scene.userData.sky.position.copy(cam.position);
-  if (tiles) { cam.updateMatrixWorld(); tiles.update(); }
+  if (tiles) { cam.updateMatrixWorld(); tiles.update(); calibTiles(); }
   composer.render();
   drawFx(Math.max(0, (sp - 40) / 45) * .8 + nosK * .6);
   // HUD
