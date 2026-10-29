@@ -80,8 +80,8 @@ function asphaltTex() {
   x.putImageData(img, 0, 0);
   // lanes: road spans u 0..1 across 25 m; 4 lanes
   const lane = u => u * 512;
-  x.fillStyle = '#e8e8e8'; x.fillRect(lane(0.03), 0, 6, 512); // white edge
-  x.fillStyle = '#f2c200'; x.fillRect(lane(0.97) - 6, 0, 6, 512); // yellow edge
+  x.fillStyle = '#f2c200'; x.fillRect(lane(0.03), 0, 6, 512); // yellow edge = left (median) side, US one-way roadway
+  x.fillStyle = '#e8e8e8'; x.fillRect(lane(0.97) - 6, 0, 6, 512); // white edge = right shoulder
   x.fillStyle = '#d8d8d8'; [0.265, 0.5, 0.735].forEach(u => x.fillRect(lane(u) - 3, 0, 5, 200));
   // tire wear stripes
   x.globalAlpha = 0.12; x.fillStyle = '#000'; [0.15, 0.38, 0.62, 0.85].forEach(u => x.fillRect(lane(u) - 14, 0, 28, 512)); x.globalAlpha = 1;
@@ -253,7 +253,7 @@ let carReady = false;
     set('body', body); set('rim_fl', detail); set('rim_fr', detail); set('rim_rr', detail); set('rim_rl', detail); set('trim', detail); set('glass', glass);
     ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr'].forEach(n => { const w = m.getObjectByName(n); if (w) wheels.push(w); });
     m.scale.setScalar(1.05);
-    carBody.add(m);
+    m.rotation.y += Math.PI; carBody.add(m);
     // fake contact shadow
     const sc = document.createElement('canvas'); sc.width = sc.height = 128; const x = sc.getContext('2d'); const gr = x.createRadialGradient(64, 64, 10, 64, 64, 64); gr.addColorStop(0, 'rgba(0,0,0,.85)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
     const sh = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 5.4), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.08; car.add(sh);
@@ -332,7 +332,7 @@ const S = {
   x: 0, z: 0, h: 0, vx: 0, vz: 0, yawRate: 0, ci: 2, run: false, lapT: 0, lap: 1, best: +localStorage.racexBest2 || 0, last: 0,
   nos: 1, rpm: 900, gear: 1, shake: 0, segName: '', segT: 0, prog: 0, started: false
 };
-function placeStart() { const i = Math.max(0, Math.min(N - 1, +Q.get('at') || 2)), p = P[i], t = TAN[i]; S.x = p.x + NOR[i].x * -4; S.z = p.y + NOR[i].y * -4; S.h = Math.atan2(t.x, t.y); S.ci = i; }
+function placeStart() { const i = Math.max(0, Math.min(N - 1, +Q.get('at') || 2)), p = P[i], t = TAN[i]; S.x = p.x + NOR[i].x * 4; S.z = p.y + NOR[i].y * 4; /* +NOR = right of travel */ S.h = Math.atan2(t.x, t.y); S.ci = i; }
 placeStart();
 let ghostRec = [], ghost = JSON.parse(localStorage.racexGhost2 || 'null');
 function nearest(x, z) {
@@ -460,7 +460,7 @@ function frame(now) {
   pool.forEach((l, i) => { if (near[i]) { l.position.copy(near[i][0]); l.visible = true; } else l.visible = false; });
   // camera: chase, FOV kick, shake
   const sp = st.spd, nosK = st.nosOn ? 1 : 0;
-  const CH = +(Q.get('camh') || 0); const back = 6.6 + sp * 0.025 + nosK * 1.2 + CH * 1.2, hgt = 2.1 + sp * .006 + CH;
+  const CH = +(Q.get('camh') || 0); const back = (Q.has('front') ? -1 : 1) * 6.6 + sp * 0.025 + nosK * 1.2 + CH * 1.2, hgt = 2.1 + sp * .006 + CH;
   const ch = S.h - S.yawRate * 0.12;
   tmpV.set(S.x - Math.sin(ch) * back, cy + hgt, S.z - Math.cos(ch) * back);
   camPos.lerp(tmpV, 1 - Math.exp(-dt * 9));

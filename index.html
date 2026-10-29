@@ -10,7 +10,7 @@
 #mm{width:130px;height:130px;border-radius:50%;background:radial-gradient(rgba(0,20,40,.75),rgba(0,0,0,.55));border:2px solid rgba(0,229,255,.6);box-shadow:0 0 14px rgba(0,229,255,.35)}
 #tr{top:calc(8px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));text-align:right;font-style:italic}
 #tr .big{font-size:26px;letter-spacing:1px}#tr .lbl{font-size:11px;color:#00e5ff;letter-spacing:2px}#tr .sm{font-size:14px;color:#ddd}
-#gauge{bottom:calc(6px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:230px;height:150px}
+#gauge{top:calc(2px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:150px;height:98px;opacity:.95}
 #seg{top:24%;width:100%;text-align:center;font-size:48px;font-style:italic;letter-spacing:3px;color:#fff;opacity:0;transition:opacity .35s,transform .35s;transform:scale(.9);text-shadow:0 0 18px #ff2bd6,0 0 4px #000}
 #seg.on{opacity:1;transform:scale(1)}#seg small{display:block;font-size:14px;color:#00e5ff;letter-spacing:6px}
 .btn{position:fixed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:1px;color:#fff;background:rgba(10,14,24,.45);border:2px solid rgba(255,255,255,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
@@ -26,7 +26,8 @@
 #start p{margin:6px;font-family:system-ui,sans-serif;color:#cfd8e3;font-size:14px}
 #go{margin-top:14px;font:inherit;font-size:22px;letter-spacing:4px;padding:14px 46px;border:0;border-radius:6px;color:#000;background:linear-gradient(90deg,#00e5ff,#ff2bd6);box-shadow:0 0 24px rgba(255,43,214,.6)}
 #load{font-family:system-ui;font-size:12px;color:#8aa}
-#credit{position:fixed;bottom:2px;left:50%;transform:translateX(-50%);font:9px system-ui;color:rgba(255,255,255,.4);pointer-events:none;white-space:nowrap}
+#credit{margin:12px auto 0;max-width:90%;font:10px system-ui;color:rgba(255,255,255,.55);white-space:normal;text-align:center}
+#attr{position:fixed;bottom:calc(1px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font:8px system-ui;color:rgba(255,255,255,.45);pointer-events:none;white-space:nowrap}
 #rot{display:none;position:fixed;inset:0;background:#05060a;align-items:center;justify-content:center;font-size:22px;z-index:9;text-align:center}
 @media (orientation:portrait) and (max-width:760px){#rot{display:flex}}
 </style></head><body>
@@ -37,11 +38,11 @@
 <div class="hud" id="seg"></div>
 <div id="steer"></div><div id="knob"><div id="nub"></div></div>
 <div class="btn" id="brk">BRAKE<br>DRIFT</div><div class="btn" id="gas">GAS</div><div class="btn" id="nos">NOS</div>
-<div id="start"><h1>RACEX</h1><p style="letter-spacing:4px;color:#00e5ff">VANCOUVER · NIGHT LOOP</p>
+<div id="start"><h1>RACEX</h1><p style="letter-spacing:4px;color:#00e5ff">VANCOUVER · FREEWAY LOOP</p>
 <p>SR-500 W → I-5 S → SR-14 E → I-205 N · real OpenStreetMap geometry · <span id="mi"></span> mi</p>
 <p style="font-size:12px;opacity:.8">Left thumb: drag to steer · Right: GAS / BRAKE (hold while steering to drift) / NOS<br>Keyboard: arrows, Space = drift, Shift = nitro</p>
-<button id="go">RACE</button><div id="load">loading car…</div><div id="modes" style="margin-top:10px;font:600 13px Arial;letter-spacing:1px"><a id="mDay" href="./" style="color:#ffd27a;margin:0 10px">☀ GOLDEN HOUR</a><a id="mNight" href="./?night" style="color:#7ff3ff;margin:0 10px">☾ NIGHT</a><a href="./?low" style="color:#ccc;margin:0 10px">LOW-END PHONE</a></div></div>
-<div id="credit"></div>
+<button id="go">RACE</button><div id="load">loading car…</div><div id="modes" style="margin-top:10px;font:600 13px Arial;letter-spacing:1px"><a id="mDay" href="./" style="color:#ffd27a;margin:0 10px">☀ GOLDEN HOUR</a><a id="mNight" href="./?night" style="color:#7ff3ff;margin:0 10px">☾ NIGHT</a><a href="./?low" style="color:#ccc;margin:0 10px">LOW-END PHONE</a></div><div id="credit"></div></div>
+<div id="attr">Imagery USGS · © OpenStreetMap</div>
 <div id="rot">↻ Turn your phone sideways to race</div>
 <script src="config.js"></script>
 <script type="importmap">{"imports":{
