@@ -216,17 +216,19 @@ let tiles = null, scen = null;
 buildScenery(scene, R, { low: LOW }).then(s => { scen = s; s.root.userData.setNight(NIGHT); console.log('[RaceX] scenery', s.root.userData.buildings, 'buildings', s.root.userData.trees, 'trees'); window.__scen = s.root.userData; document.getElementById('load').textContent = carReady ? 'ready' : 'loading car…'; })
   .catch(e => { console.error('scenery failed', e); fallback.visible = true; });
 async function initTiles() {
-  if (!TILES_KEY) return;
+  if (!TILES_KEY || Q.has('notiles')) return;
   try {
+    const pre = await fetch('https://tile.googleapis.com/v1/3dtiles/root.json?key=' + encodeURIComponent(TILES_KEY));
+    if (!pre.ok) { let m = ''; try { m = (await pre.json()).error.message; } catch (_) {} console.warn('[RaceX] 3D Tiles unavailable (' + pre.status + '), using built-in scenery:', m); return; }
     const { TilesRenderer } = await import('3d-tiles-renderer');
     const { GoogleCloudAuthPlugin, ReorientationPlugin, TileCompressionPlugin, UpdateOnChangePlugin } = await import('3d-tiles-renderer/plugins');
     tiles = new TilesRenderer();
     tiles.registerPlugin(new GoogleCloudAuthPlugin({ apiToken: TILES_KEY, autoRefreshToken: true }));
     if (TileCompressionPlugin) tiles.registerPlugin(new TileCompressionPlugin());
     const [lat0, lon0] = TRACK.origin;
-    const h = +(Q.get('h') ?? CFG.tilesHeight ?? 40), rot = +(Q.get('rot') ?? CFG.tilesRotation ?? 0);
+    const h = +(Q.get('h') ?? CFG.tilesHeight ?? -22), rot = +(Q.get('rot') ?? CFG.tilesRotation ?? 0);
     tiles.registerPlugin(new ReorientationPlugin({ lat: lat0 * Math.PI / 180, lon: lon0 * Math.PI / 180, height: h, up: '+y', recenter: true, azimuth: rot * Math.PI / 180 }));
-    tiles.errorTarget = LOW ? 24 : 12;
+    tiles.errorTarget = LOW ? 32 : (innerWidth < 1000 ? 20 : 12); tiles.maxDepth = 30; if (tiles.lruCache) { tiles.lruCache.minSize = 300; tiles.lruCache.maxSize = LOW ? 500 : 900; }
     tiles.setCamera(cam); tiles.setResolutionFromRenderer(cam, R);
     scene.add(tiles.group);
     // keep road on top; hide fallback ground/lights but keep street lamps & walls
